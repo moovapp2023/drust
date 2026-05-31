@@ -5,7 +5,7 @@ Move widget for Claude Code. Pops up a set of moves while you're working — eve
 ## Install
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/moovapp2023/drrust/main/install.py | python3
+curl -fsSL https://raw.githubusercontent.com/moovapp2023/drust/main/install.py | python3
 ```
 
 That's it. The installer:

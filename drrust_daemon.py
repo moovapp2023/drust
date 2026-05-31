@@ -13,8 +13,8 @@ import tempfile
 import urllib.request
 from http.server import HTTPServer, BaseHTTPRequestHandler
 
-VERSION_URL = "https://raw.githubusercontent.com/moovapp2023/drrust/main/version.txt"
-INSTALL_URL = "https://raw.githubusercontent.com/moovapp2023/drrust/main/install.py"
+VERSION_URL = "https://raw.githubusercontent.com/moovapp2023/drust/main/version.txt"
+INSTALL_URL = "https://raw.githubusercontent.com/moovapp2023/drust/main/install.py"
 
 
 def check_for_updates():
