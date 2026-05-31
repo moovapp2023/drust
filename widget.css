@@ -1,0 +1,791 @@
+#mova-widget {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 280px;
+  z-index: 999999;
+  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+#mova-widget.mova-hidden {
+  transform: translateX(320px);
+}
+
+#mova-widget.mova-minimized {
+  width: auto;
+}
+
+#mova-card {
+  background: #0f0f0f;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04);
+  position: relative;
+  max-height: calc(100vh - 48px);
+  display: flex;
+  flex-direction: column;
+}
+
+#mova-complete-overlay {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 110%, #c43000 0%, #7a1500 30%, #1a0300 70%, #090000 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 20;
+  border-radius: 16px;
+  transition: opacity 0.22s;
+  overflow: hidden;
+}
+
+#mova-complete-overlay.active {
+  opacity: 1;
+}
+
+/* fire glow pulse from bottom */
+#mova-complete-overlay::after {
+  content: '';
+  position: absolute;
+  bottom: -20px; left: 50%;
+  transform: translateX(-50%);
+  width: 160px; height: 80px;
+  background: radial-gradient(ellipse, rgba(255,100,0,0.55) 0%, transparent 70%);
+  border-radius: 50%;
+  animation: mova-fire-glow 1.2s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+
+@keyframes mova-fire-glow {
+  from { opacity: 0.5; transform: translateX(-50%) scaleX(1); }
+  to   { opacity: 1;   transform: translateX(-50%) scaleX(1.15); }
+}
+
+/* embers */
+.mova-ember {
+  position: absolute;
+  bottom: 0;
+  border-radius: 50%;
+  background: #ffaa00;
+  opacity: 0;
+  animation: mova-ember-rise var(--dur, 1.2s) ease-out var(--delay, 0s) infinite;
+}
+
+@keyframes mova-ember-rise {
+  0%   { opacity: 0.9; transform: translateY(0) translateX(0) scale(1); }
+  60%  { opacity: 0.6; }
+  100% { opacity: 0;   transform: translateY(-130px) translateX(var(--drift, 0px)) scale(0.15); }
+}
+
+#mova-complete-check {
+  stroke-dasharray: 60;
+  stroke-dashoffset: 60;
+}
+
+#mova-complete-overlay.active #mova-complete-check {
+  animation: mova-draw-check 0.35s cubic-bezier(0.4, 0, 0.2, 1) 0.1s forwards;
+}
+
+@keyframes mova-draw-check {
+  to { stroke-dashoffset: 0; }
+}
+
+#mova-complete-label {
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #ffcc66;
+  opacity: 0;
+  text-shadow: 0 0 12px rgba(255,140,0,0.8);
+}
+
+#mova-complete-overlay.active #mova-complete-label {
+  animation: mova-fade-in 0.3s ease 0.3s forwards;
+}
+
+@keyframes mova-fade-in {
+  to { opacity: 1; }
+}
+
+/* Desk Moves button */
+#mova-desk-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 6px 10px;
+  margin-bottom: 8px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: none;
+  color: rgba(255,255,255,0.45);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  cursor: pointer;
+  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+
+#mova-desk-btn:hover {
+  border-color: rgba(255,255,255,0.3);
+  color: rgba(255,255,255,0.8);
+}
+
+#mova-desk-btn.active {
+  border-color: #B7410E;
+  background: rgba(183,65,14,0.15);
+  color: #e87040;
+}
+
+#mova-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  background: #161616;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+#mova-logo {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+#mova-logo span {
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+#mova-logo .mova-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ff5c35;
+  animation: mova-pulse 2s infinite;
+}
+
+@keyframes mova-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(0.85); }
+}
+
+#mova-controls {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.mova-btn-icon {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: rgba(255,255,255,0.4);
+  padding: 4px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s, background 0.15s;
+  font-size: 14px;
+  line-height: 1;
+}
+
+.mova-btn-icon:hover {
+  color: rgba(255,255,255,0.9);
+  background: rgba(255,255,255,0.08);
+}
+
+/* ── Move meta strip (above video) ── */
+#mova-move-meta {
+  padding: 8px 12px 6px;
+  background: #161616;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+#mova-move-name-top {
+  font-size: 16px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#mova-move-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.mova-move-tag {
+  padding: 2px 7px;
+  border-radius: 20px;
+  border: 1px solid rgba(255,255,255,0.2);
+  color: rgba(255,255,255,0.5);
+  font-size: 8px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+#mova-hover-guard {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: transparent;
+}
+
+#mova-video-wrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 9/14;
+  background: #0a0a0a;
+  overflow: hidden;
+}
+
+#mova-video-wrap iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+#mova-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(10,10,10,0.85);
+  backdrop-filter: blur(4px);
+  cursor: pointer;
+  transition: opacity 0.2s;
+  z-index: 2;
+}
+
+#mova-overlay.mova-loaded {
+  opacity: 0;
+  pointer-events: none;
+}
+
+#mova-overlay-move-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: #fff;
+  text-align: center;
+  padding: 0 16px;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+#mova-overlay-play {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #ff5c35;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12px;
+  transition: transform 0.15s;
+}
+
+#mova-overlay:hover #mova-overlay-play {
+  transform: scale(1.1);
+}
+
+#mova-overlay-play svg {
+  margin-left: 3px;
+}
+
+#mova-overlay-hint {
+  font-size: 11px;
+  color: rgba(255,255,255,0.4);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+#mova-footer {
+  padding: 10px 12px;
+  background: #161616;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  overflow-y: auto;
+  flex-shrink: 1;
+}
+
+#mova-move-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.9);
+  margin-bottom: 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#mova-active-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.mova-chip {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px 2px 8px;
+  border-radius: 20px;
+  border: 1px solid var(--effect-color);
+  color: rgba(255,255,255,0.8);
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.mova-chip-neutral {
+  border-color: rgba(255,255,255,0.3);
+  color: rgba(255,255,255,0.7);
+}
+
+.mova-chip-x {
+  background: none;
+  border: none;
+  color: rgba(255,255,255,0.45);
+  cursor: pointer;
+  font-size: 13px;
+  padding: 0;
+  line-height: 1;
+  margin-left: 1px;
+}
+
+.mova-chip-x:hover {
+  color: rgba(255,255,255,0.9);
+}
+
+#mova-effects {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  margin-bottom: 6px;
+}
+
+#mova-more-toggle {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: rgba(255,255,255,0.3);
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  padding: 4px 0 6px;
+  width: 100%;
+}
+
+#mova-more-toggle:hover {
+  color: rgba(255,255,255,0.6);
+}
+
+#mova-more-arrow {
+  transition: transform 0.2s;
+}
+
+#mova-more-filters {
+  display: none;
+  margin-bottom: 8px;
+}
+
+.mova-filter-group {
+  margin-bottom: 8px;
+}
+
+.mova-filter-group-label {
+  font-size: 8px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(255,255,255,0.25);
+  margin-bottom: 4px;
+  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.mova-filter-chips-row {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.mova-filter-chip {
+  padding: 3px 9px;
+  border-radius: 20px;
+  border: 1px solid rgba(255,255,255,0.15);
+  background: none;
+  color: rgba(255,255,255,0.45);
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+
+.mova-filter-chip:hover {
+  border-color: rgba(255,255,255,0.35);
+  color: rgba(255,255,255,0.75);
+}
+
+.mova-filter-chip.active {
+  border-color: rgba(255,255,255,0.6);
+  color: #fff;
+  background: rgba(255,255,255,0.08);
+}
+
+.mova-effect-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 4px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  padding: 2px 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.mova-effect-circle {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid transparent;
+  box-sizing: border-box;
+  transition: border-color 0.18s, opacity 0.18s;
+  overflow: hidden;
+}
+
+.mova-effect-circle img {
+  width: 65%;
+  height: 65%;
+  object-fit: contain;
+  display: block;
+  opacity: 0.55;
+  transition: opacity 0.18s;
+}
+
+.mova-effect-label {
+  font-size: 8px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: transparent;
+  line-height: 1;
+  transition: color 0.18s;
+  white-space: nowrap;
+  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.mova-effect-btn:hover .mova-effect-circle img {
+  opacity: 0.8;
+}
+
+.mova-effect-btn.active .mova-effect-circle {
+  border-color: var(--effect-color);
+}
+
+.mova-effect-btn.active .mova-effect-circle img {
+  opacity: 1;
+}
+
+.mova-effect-btn.active .mova-effect-label {
+  color: rgba(255,255,255,0.8);
+}
+
+#mova-action-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+#mova-done-btn {
+  display: none;
+  flex: 1;
+  padding: 7px 10px;
+  background: #2a7d57;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  transition: background 0.15s, transform 0.1s;
+}
+
+#mova-done-btn:hover {
+  background: #33996a;
+}
+
+#mova-done-btn:active {
+  transform: scale(0.97);
+}
+
+#mova-shuffle-btn {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  background: rgba(255,255,255,0.08);
+  color: rgba(255,255,255,0.7);
+  border: none;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, transform 0.1s;
+  flex-shrink: 0;
+}
+
+#mova-shuffle-btn:hover {
+  background: rgba(255,255,255,0.14);
+  color: #fff;
+}
+
+#mova-shuffle-btn:active {
+  transform: scale(0.92);
+}
+
+#mova-mute-btn {
+  width: 32px; height: 32px; padding: 0;
+  background: rgba(255,255,255,0.08);
+  color: rgba(255,255,255,0.5);
+  border: none; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  flex-shrink: 0;
+}
+#mova-mute-btn:hover { background: rgba(255,255,255,0.14); color: #fff; }
+#mova-mute-btn.unmuted { color: #fff; }
+
+/* Minimized pill */
+#mova-pill {
+  display: none;
+  background: #0f0f0f;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 40px;
+  padding: 8px 14px;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  transition: background 0.15s;
+}
+
+#mova-pill:hover {
+  background: #1a1a1a;
+}
+
+#mova-widget.mova-minimized #mova-card {
+  display: none;
+}
+
+#mova-widget.mova-minimized #mova-pill {
+  display: flex;
+}
+
+#mova-pill-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ff5c35;
+  animation: mova-pulse 2s infinite;
+}
+
+#mova-pill-text {
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+#mova-pill-count {
+  font-size: 10px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.45);
+  letter-spacing: 0.04em;
+  display: none;
+}
+
+#mova-pill-count.visible {
+  display: inline;
+}
+
+/* Anchor to top when filters open so it never clips off-screen top */
+#mova-widget.mova-expanded {
+  bottom: auto;
+  top: 24px;
+}
+
+/* ── Flame counter in header ── */
+#mova-count {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+#mova-count-num {
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.35);
+  line-height: 1;
+  transition: color 0.3s;
+}
+#mova-count-num.has-moves { color: #ff7a3d; }
+#mova-flame { display: block; }
+#mova-flame.lit {
+  animation: mova-flame-flicker 1.4s ease-in-out infinite;
+}
+@keyframes mova-flame-flicker {
+  0%,100% { transform: scaleY(1) rotate(-1.5deg); }
+  30%     { transform: scaleY(1.1) rotate(2deg); }
+  60%     { transform: scaleY(0.94) rotate(-1deg); }
+}
+@keyframes mova-flame-bump {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.55); }
+  100% { transform: scale(1); }
+}
+
+/* ── Recap button in pill ── */
+#mova-recap-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: rgba(255,255,255,0.35);
+  padding: 2px 3px;
+  margin-left: 2px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  transition: color 0.15s;
+}
+#mova-recap-btn:hover { color: rgba(255,255,255,0.8); }
+
+/* ── Recap panel ── */
+#mova-recap {
+  display: none;
+  flex-direction: column;
+  gap: 8px;
+  background: #0f0f0f;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 16px;
+  padding: 14px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  width: 240px;
+}
+
+#mova-widget.mova-recap-open #mova-pill { display: none; }
+#mova-widget.mova-recap-open #mova-recap { display: flex; }
+
+#mova-recap-total {
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 0.02em;
+}
+
+.mova-rbar-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.mova-rbar-label {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: rgba(255,255,255,0.5);
+  width: 68px;
+  flex-shrink: 0;
+}
+.mova-rbar-track {
+  flex: 1;
+  height: 6px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.mova-rbar-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.4s cubic-bezier(0.4,0,0.2,1);
+}
+.mova-rbar-n {
+  font-size: 9px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.4);
+  width: 10px;
+  text-align: right;
+  flex-shrink: 0;
+}
+.mova-rbar-empty {
+  font-size: 10px;
+  color: rgba(255,255,255,0.3);
+}
+
+#mova-recap-close {
+  align-self: flex-end;
+  background: none;
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 6px;
+  color: rgba(255,255,255,0.4);
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 3px 8px;
+  cursor: pointer;
+  margin-top: 2px;
+  transition: color 0.15s, border-color 0.15s;
+}
+#mova-recap-close:hover { color: #fff; border-color: rgba(255,255,255,0.4); }
+
+/* Slide-in animation on first load */
+@keyframes mova-slidein {
+  from { transform: translateX(320px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+#mova-widget.mova-intro {
+  animation: mova-slidein 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}

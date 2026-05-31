@@ -1,0 +1,1104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>D•RUST</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #0f0f0f;
+      font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      width: 300px;
+      overflow: hidden;
+      border-radius: 16px;
+    }
+
+    #drrust-card {
+      background: #0f0f0f;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.6);
+      position: relative;
+    }
+
+    /* ── Header (drag region) ── */
+    #drrust-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 12px;
+      background: #161616;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      -webkit-app-region: drag;
+      cursor: grab;
+    }
+
+    #drrust-logo {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .drrust-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: #B7410E;
+      animation: drrust-pulse 2s infinite;
+    }
+
+    @keyframes drrust-pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.8); }
+    }
+
+    #drrust-logo span {
+      font-size: 13px; font-weight: 700;
+      color: #fff; letter-spacing: 0.04em;
+    }
+
+    #drrust-close {
+      -webkit-app-region: no-drag;
+      background: none; border: none;
+      color: rgba(255,255,255,0.3);
+      cursor: pointer; font-size: 16px;
+      line-height: 1; padding: 2px 4px;
+      border-radius: 4px;
+      transition: color 0.15s, background 0.15s;
+    }
+
+    #drrust-close:hover {
+      color: rgba(255,255,255,0.8);
+      background: rgba(255,255,255,0.08);
+    }
+
+    /* ── Move meta strip (above video) ── */
+    #drrust-move-meta {
+      padding: 8px 12px 6px;
+      background: #0f0f0f;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+
+    #drrust-hover-guard {
+      position: absolute; inset: 0; z-index: 1;
+      background: transparent;
+    }
+
+    /* ── Video ── */
+    #drrust-video-wrap {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 9/10;
+      background: #0a0a0a;
+      overflow: hidden;
+    }
+
+    #drrust-video-wrap iframe {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      border: none;
+    }
+
+    #drrust-overlay {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 10px;
+      background: rgba(10,10,10,0.88);
+      backdrop-filter: blur(4px);
+      cursor: pointer;
+      transition: opacity 0.2s;
+      z-index: 2;
+    }
+
+    #drrust-overlay.loaded {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    #drrust-overlay-play {
+      width: 48px; height: 48px;
+      border-radius: 50%;
+      background: #B7410E;
+      display: flex; align-items: center; justify-content: center;
+      transition: transform 0.15s;
+    }
+
+    #drrust-overlay:hover #drrust-overlay-play { transform: scale(1.1); }
+
+    #drrust-overlay-play svg { margin-left: 3px; }
+
+    #drrust-overlay-name {
+      font-size: 14px; font-weight: 600;
+      color: #fff; text-align: center;
+      padding: 0 16px; line-height: 1.3;
+    }
+
+    #drrust-overlay-hint {
+      font-size: 10px;
+      color: rgba(255,255,255,0.4);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    /* ── Completion overlay ── */
+    #drrust-complete {
+      position: absolute; inset: 0;
+      background: #1f6b47;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 10px;
+      opacity: 0; pointer-events: none;
+      z-index: 20; border-radius: 16px;
+      transition: opacity 0.18s;
+    }
+
+    #drrust-complete.active { opacity: 1; }
+
+    #drrust-check {
+      stroke-dasharray: 60;
+      stroke-dashoffset: 60;
+    }
+
+    #drrust-complete.active #drrust-check {
+      animation: drrust-draw 0.35s cubic-bezier(0.4,0,0.2,1) 0.1s forwards;
+    }
+
+    @keyframes drrust-draw { to { stroke-dashoffset: 0; } }
+
+    #drrust-complete-label {
+      font-size: 11px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.1em;
+      color: rgba(255,255,255,0.7);
+      opacity: 0;
+    }
+
+    #drrust-complete.active #drrust-complete-label {
+      animation: drrust-fadein 0.3s ease 0.3s forwards;
+    }
+
+    @keyframes drrust-fadein { to { opacity: 1; } }
+
+    /* ── Footer ── */
+    #drrust-footer {
+      padding: 10px 12px;
+      background: #161616;
+      border-top: 1px solid rgba(255,255,255,0.06);
+    }
+
+    #drrust-move-name {
+      font-size: 16px; font-weight: 700;
+      color: #fff;
+      margin-bottom: 6px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+
+    #drrust-active-chips {
+      display: flex; flex-wrap: wrap;
+      gap: 4px; margin-bottom: 6px;
+    }
+
+    .drrust-chip {
+      display: flex; align-items: center; gap: 4px;
+      padding: 2px 8px;
+      border-radius: 20px;
+      border: 1px solid var(--effect-color);
+      color: rgba(255,255,255,0.8);
+      font-size: 9px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.06em;
+    }
+
+    .drrust-chip-neutral {
+      border-color: rgba(255,255,255,0.3);
+      color: rgba(255,255,255,0.7);
+    }
+
+    .drrust-chip-x {
+      background: none; border: none;
+      color: rgba(255,255,255,0.45);
+      cursor: pointer; font-size: 13px;
+      padding: 0; line-height: 1; margin-left: 1px;
+    }
+
+    .drrust-chip-x:hover { color: rgba(255,255,255,0.9); }
+
+    #drrust-effects {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      margin-bottom: 6px;
+    }
+
+    .drrust-effect-btn {
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: flex-start;
+      gap: 4px; border: none; background: none;
+      cursor: pointer; padding: 2px 0; width: 100%;
+      -webkit-app-region: no-drag;
+    }
+
+    .drrust-effect-circle {
+      width: 36px; height: 36px;
+      border-radius: 50%; background: transparent;
+      display: flex; align-items: center; justify-content: center;
+      border: 2px solid transparent;
+      transition: border-color 0.18s; overflow: hidden;
+    }
+
+    .drrust-effect-circle img {
+      width: 65%; height: 65%;
+      object-fit: contain; opacity: 0.55;
+      transition: opacity 0.18s;
+    }
+
+    .drrust-effect-label {
+      font-size: 8px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.06em;
+      color: transparent; line-height: 1;
+      transition: color 0.18s; white-space: nowrap;
+    }
+
+    .drrust-effect-btn:hover .drrust-effect-circle img { opacity: 0.8; }
+    .drrust-effect-btn.active .drrust-effect-circle { border-color: var(--effect-color); }
+    .drrust-effect-btn.active .drrust-effect-circle img { opacity: 1; }
+    .drrust-effect-btn.active .drrust-effect-label { color: rgba(255,255,255,0.8); }
+
+    /* ── Desk Moves toggle ── */
+    #drrust-desk-btn {
+      display: flex; align-items: center; justify-content: center;
+      gap: 6px; width: 100%;
+      padding: 6px 10px; margin-bottom: 8px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: none;
+      color: rgba(255,255,255,0.45);
+      font-size: 10px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.07em;
+      cursor: pointer;
+      transition: border-color 0.15s, color 0.15s, background 0.15s;
+      -webkit-app-region: no-drag;
+    }
+    #drrust-desk-btn:hover {
+      border-color: rgba(255,255,255,0.3);
+      color: rgba(255,255,255,0.8);
+    }
+    #drrust-desk-btn.active {
+      border-color: #B7410E;
+      background: rgba(183,65,14,0.15);
+      color: #e87040;
+    }
+
+    #drrust-more-toggle {
+      display: flex; align-items: center; gap: 5px;
+      background: none; border: none; cursor: pointer;
+      color: rgba(255,255,255,0.3); font-size: 9px;
+      font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 4px 0 6px; width: 100%;
+      -webkit-app-region: no-drag;
+    }
+
+    #drrust-more-toggle:hover { color: rgba(255,255,255,0.6); }
+    #drrust-more-arrow { transition: transform 0.2s; }
+    #drrust-more-filters { display: none; margin-bottom: 8px; }
+
+    .drrust-filter-group { margin-bottom: 8px; }
+
+    .drrust-filter-group-label {
+      font-size: 8px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.08em;
+      color: rgba(255,255,255,0.25); margin-bottom: 4px;
+    }
+
+    .drrust-filter-chips-row { display: flex; gap: 4px; flex-wrap: wrap; }
+
+    .drrust-filter-chip {
+      padding: 3px 9px; border-radius: 20px;
+      border: 1px solid rgba(255,255,255,0.15);
+      background: none; color: rgba(255,255,255,0.45);
+      font-size: 9px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.05em;
+      cursor: pointer;
+      transition: border-color 0.15s, color 0.15s, background 0.15s;
+      -webkit-app-region: no-drag;
+    }
+
+    .drrust-filter-chip:hover { border-color: rgba(255,255,255,0.35); color: rgba(255,255,255,0.75); }
+    .drrust-filter-chip.active { border-color: rgba(255,255,255,0.6); color: #fff; background: rgba(255,255,255,0.08); }
+
+    #drrust-action-row {
+      display: flex; gap: 6px; align-items: center;
+      -webkit-app-region: no-drag;
+    }
+
+    #drrust-done-btn {
+      flex: 1; padding: 7px 10px;
+      background: #2a7d57; color: #fff;
+      border: none; border-radius: 8px;
+      font-size: 11px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.06em;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+      display: none;
+    }
+
+    #drrust-done-btn:hover { background: #33996a; }
+    #drrust-done-btn:active { transform: scale(0.97); }
+
+    #drrust-mute-btn {
+      width: 32px; height: 32px; padding: 0;
+      background: rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.4);
+      border: none; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: background 0.15s, color 0.15s;
+    }
+    #drrust-mute-btn:hover { background: rgba(255,255,255,0.14); color: #fff; }
+    #drrust-mute-btn.unmuted { color: #fff; }
+
+    #drrust-shuffle-btn {
+      width: 32px; height: 32px; padding: 0;
+      background: rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.7);
+      border: none; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s, transform 0.1s;
+    }
+
+    #drrust-shuffle-btn:hover { background: rgba(255,255,255,0.14); color: #fff; }
+    #drrust-shuffle-btn:active { transform: scale(0.92); }
+
+    /* ── Daily count ── */
+    #drrust-count {
+      display: flex; align-items: center; gap: 4px;
+      -webkit-app-region: no-drag;
+    }
+    #drrust-count-num {
+      font-size: 12px; font-weight: 700;
+      color: rgba(255,255,255,0.45);
+      line-height: 1;
+      transition: color 0.3s;
+    }
+    #drrust-count-num.has-moves {
+      color: #ff7a3d;
+    }
+    #drrust-flame {
+      transition: transform 0.2s;
+    }
+    #drrust-flame.bump {
+      animation: drrust-flame-bump 0.35s ease;
+    }
+    @keyframes drrust-flame-flicker {
+      0%,100% { transform: scaleY(1) rotate(-1.5deg); }
+      30%     { transform: scaleY(1.1) rotate(2deg); }
+      60%     { transform: scaleY(0.94) rotate(-1deg); }
+    }
+    @keyframes drrust-flame-bump {
+      0%   { transform: scale(1); }
+      40%  { transform: scale(1.5); }
+      100% { transform: scale(1); }
+    }
+
+    /* ── Pill (collapsed state) ── */
+    #drrust-pill {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      background: #0f0f0f;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 40px;
+      cursor: pointer;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+      -webkit-app-region: drag;
+      transition: background 0.15s;
+    }
+    #drrust-pill:hover { background: #1a1a1a; }
+    #drrust-pill-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: #B7410E; flex-shrink: 0;
+      animation: drrust-pulse 2s infinite;
+    }
+    #drrust-pill-text {
+      font-size: 12px; font-weight: 700;
+      color: #fff; letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    #drrust-pill-count {
+      font-size: 10px; font-weight: 700;
+      color: rgba(255,255,255,0.45);
+      display: none;
+    }
+    #drrust-pill-count.visible { display: inline; }
+
+    /* ── Minimize button in header ── */
+    #drrust-minimize {
+      -webkit-app-region: no-drag;
+      background: none; border: none;
+      color: rgba(255,255,255,0.3);
+      cursor: pointer; font-size: 16px;
+      line-height: 1; padding: 2px 4px;
+      border-radius: 4px;
+      transition: color 0.15s, background 0.15s;
+    }
+    #drrust-minimize:hover {
+      color: rgba(255,255,255,0.8);
+      background: rgba(255,255,255,0.08);
+    }
+
+    /* ── Recap button in pill ── */
+    #drrust-recap-btn {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.15);
+      cursor: pointer;
+      color: rgba(255,255,255,0.7);
+      padding: 3px 8px;
+      border-radius: 20px;
+      font-size: 9px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.06em;
+      font-family: inherit;
+      transition: background 0.15s, color 0.15s;
+      margin-left: 4px;
+      flex-shrink: 0;
+    }
+    #drrust-recap-btn:hover { background: rgba(255,255,255,0.15); color: #fff; }
+
+    /* ── Recap panel ── */
+    #drrust-recap {
+      display: none; flex-direction: column; gap: 6px;
+      background: #161616;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 16px; padding: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+      width: 176px; box-sizing: border-box;
+    }
+    #drrust-recap-total {
+      font-size: 12px; font-weight: 700; color: #fff;
+    }
+    .drrust-rbar-row { display: flex; align-items: center; gap: 5px; }
+    .drrust-rbar-label {
+      font-size: 8px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.05em; color: rgba(255,255,255,0.5);
+      width: 52px; flex-shrink: 0;
+    }
+    .drrust-rbar-track {
+      flex: 1; height: 5px;
+      background: rgba(255,255,255,0.08); border-radius: 3px; overflow: hidden;
+    }
+    .drrust-rbar-fill { height: 100%; border-radius: 3px; }
+    .drrust-rbar-n {
+      font-size: 9px; font-weight: 700;
+      color: rgba(255,255,255,0.4); width: 10px; text-align: right; flex-shrink: 0;
+    }
+    .drrust-rbar-empty { font-size: 10px; color: rgba(255,255,255,0.3); }
+    #drrust-recap-close {
+      align-self: flex-end; background: none;
+      border: 1px solid rgba(255,255,255,0.12); border-radius: 6px;
+      color: rgba(255,255,255,0.4); font-size: 9px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.06em;
+      padding: 3px 8px; cursor: pointer; margin-top: 2px;
+      font-family: inherit; transition: color 0.15s, border-color 0.15s;
+    }
+    #drrust-recap-close:hover { color: #fff; border-color: rgba(255,255,255,0.4); }
+
+    /* ── Move tags (read-only) ── */
+    #drrust-move-tags {
+      display: flex; flex-wrap: wrap;
+      gap: 4px; margin-bottom: 6px;
+    }
+    .drrust-move-tag {
+      padding: 2px 7px;
+      border-radius: 20px;
+      border: 1px solid rgba(255,255,255,0.12);
+      color: rgba(255,255,255,0.45);
+      font-size: 8px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    .drrust-move-tag.effect-tag { border-color: var(--tag-color); color: var(--tag-color); opacity: 0.8; }
+  </style>
+</head>
+<body>
+  <div id="drrust-pill">
+    <div id="drrust-pill-dot"></div>
+    <span id="drrust-pill-text">D•RUST</span>
+    <span id="drrust-pill-count"></span>
+    <button id="drrust-recap-btn" title="Today's recap" style="-webkit-app-region:no-drag">Today</button>
+  </div>
+
+  <div id="drrust-recap">
+    <div id="drrust-recap-total">🔥 0 today</div>
+    <div id="drrust-recap-bars"></div>
+    <button id="drrust-recap-close" style="-webkit-app-region:no-drag">Done</button>
+  </div>
+
+  <div id="drrust-card">
+    <div id="drrust-header">
+      <div id="drrust-logo">
+        <div class="drrust-dot"></div>
+        <span>D•RUST</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;-webkit-app-region:no-drag">
+        <button id="drrust-minimize" title="Minimise">–</button>
+        <div id="drrust-count">
+          <svg id="drrust-flame" width="13" height="13" viewBox="0 0 24 24" fill="#ff6b35">
+            <path d="M12 2C9 7 5 9 5 14a7 7 0 0014 0c0-5-3-7-7-12z"/>
+            <path d="M12 12c-1 2-2 3-2 4.5a2 2 0 004 0c0-1.5-1-2.5-2-4.5z" fill="#ffaa70"/>
+          </svg>
+          <span id="drrust-count-num">0</span>
+        </div>
+        <button id="drrust-close" title="Close">✕</button>
+      </div>
+    </div>
+
+    <div id="drrust-complete">
+      <svg width="56" height="56" viewBox="0 0 56 56" fill="none">
+        <circle cx="28" cy="28" r="22" stroke="rgba(255,255,255,0.2)" stroke-width="2"/>
+        <polyline id="drrust-check" points="17,28 24,35 39,20"
+          stroke="white" stroke-width="3"
+          stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+      </svg>
+      <div id="drrust-complete-label">Nice work</div>
+    </div>
+
+    <div id="drrust-move-meta">
+      <div id="drrust-move-name"></div>
+      <div id="drrust-move-tags"></div>
+    </div>
+
+    <div id="drrust-video-wrap">
+      <div id="drrust-overlay">
+        <div id="drrust-overlay-play">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="white">
+            <path d="M6 4l9 5-9 5V4z"/>
+          </svg>
+        </div>
+        <div id="drrust-overlay-name"></div>
+        <div id="drrust-overlay-hint">tap to play</div>
+      </div>
+      <iframe id="drrust-iframe"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowfullscreen></iframe>
+      <div id="drrust-hover-guard"></div>
+    </div>
+
+    <div id="drrust-footer">
+      <div id="drrust-active-chips"></div>
+      <div id="drrust-effects"></div>
+      <button id="drrust-desk-btn">
+        🧑‍💻 Desk Moves
+      </button>
+      <button id="drrust-more-toggle">
+        <span>More filters</span>
+        <svg id="drrust-more-arrow" width="10" height="10" viewBox="0 0 10 10"
+          fill="none" stroke="currentColor" stroke-width="1.8"
+          stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="2 3 5 7 8 3"/>
+        </svg>
+      </button>
+      <div id="drrust-more-filters">
+        <div class="drrust-filter-group">
+          <div class="drrust-filter-group-label">Position</div>
+          <div class="drrust-filter-chips-row">
+            <button class="drrust-filter-chip" data-filter="position" data-value="sitting">Sitting</button>
+            <button class="drrust-filter-chip" data-filter="position" data-value="standing">Standing</button>
+            <button class="drrust-filter-chip" data-filter="position" data-value="floor">Floor / Lying</button>
+          </div>
+        </div>
+        <div class="drrust-filter-group">
+          <div class="drrust-filter-group-label">Difficulty</div>
+          <div class="drrust-filter-chips-row">
+            <button class="drrust-filter-chip" data-filter="difficulty" data-value="easy">Easy</button>
+            <button class="drrust-filter-chip" data-filter="difficulty" data-value="medium">Medium</button>
+            <button class="drrust-filter-chip" data-filter="difficulty" data-value="hard">Hard</button>
+          </div>
+        </div>
+      </div>
+      <div id="drrust-action-row">
+        <button id="drrust-done-btn">✓ Done</button>
+        <button id="drrust-mute-btn" title="Toggle sound" style="-webkit-app-region:no-drag"></button>
+        <button id="drrust-shuffle-btn" title="Shuffle">
+          <svg width="16" height="16" viewBox="0 0 32 32" fill="none">
+            <polygon points="22,20.6 22,25.4 25,23" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10"/>
+            <polygon points="22,6.6 22,11.4 25,9" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10"/>
+            <path d="M21,23c-3.9,0-7-3.1-7-7s-3.1-7-7-7" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10"/>
+            <path d="M14,16c0,3.9-3.1,7-7,7" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10"/>
+            <path d="M21,9c-2.1,0-3.9,0.9-5.2,2.3" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ── Config ────────────────────────────────────────────────────────────────
+    const SUPABASE_URL = 'https://ozhyiuhgohqcszdbgdrn.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im96aHlpdWhnb2hxY3N6ZGJnZHJuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTExNjU3NjMsImV4cCI6MjA2Njc0MTc2M30.YlC7PEE3EeQbFlRnN1Vz89cYaKpZeMCM3bhIBhRr0Zs';
+    const CACHE_KEY = 'drrust_moves_v1';
+    const CACHE_TTL = 24 * 60 * 60 * 1000;
+
+    const EFFECTS = ['relax', 'energize', 'deep stretch', 'strengthen', 'fix', 'mobility'];
+    const EFFECT_LABELS = { relax:'Relax', energize:'Energize', 'deep stretch':'Stretch', strengthen:'Strengthen', fix:'Fix', mobility:'Mobility' };
+    const EFFECT_ICONS  = { relax:'relax.png', energize:'energize.png', 'deep stretch':'deep_stretch.png', strengthen:'strengthen.png', fix:'fix.png', mobility:'mobility.png' };
+    const EFFECT_COLORS = { relax:'#c0614a', energize:'#e8d430', 'deep stretch':'#e8923a', strengthen:'#c0272d', fix:'#888888', mobility:'#4a90d9' };
+
+    const RECENT_SIZE = 4;
+    let movesDB = [];
+    let activeEffects = new Set();
+    let activePosition = null;
+    let activeDifficulty = null;
+    let deskMode = false;
+    let videoLoaded = false;
+    let recentVideoIds = [];
+    let isMuted = localStorage.getItem('drrust_muted') !== 'false';
+
+    // ── Supabase fetch ────────────────────────────────────────────────────────
+    async function fetchMoves() {
+      const res = await fetch(
+        `${SUPABASE_URL}/rest/v1/moves?is_active=eq.true&select=id,name,youtube_link,effect,position,difficulty_level,location`,
+        { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
+      );
+      if (!res.ok) throw new Error(res.status);
+      const rows = await res.json();
+      const seen = new Set();
+      return rows.map(row => {
+        const videoId = (row.youtube_link || '').split('/').pop().split('?')[0];
+        const loc = row.location || [];
+        return {
+          id: row.id,
+          name: row.name,
+          videoId,
+          effects: [...new Set((row.effect || []).map(e => e.toLowerCase()))],
+          positions: row.position || [],
+          difficulty: ({1:'easy',2:'medium',3:'hard'})[row.difficulty_level] || (typeof row.difficulty_level === 'string' ? row.difficulty_level.toLowerCase() : null),
+          atWork: (Array.isArray(loc) ? loc : [loc]).some(l => l.toLowerCase() === 'at work'),
+        };
+      }).filter(m => {
+        if (!m.videoId || !/^[\w-]{5,15}$/.test(m.videoId)) return false;
+        if (seen.has(m.videoId)) return false;
+        seen.add(m.videoId);
+        return true;
+      });
+    }
+
+    async function loadMoves() {
+      try {
+        const cached = JSON.parse(localStorage.getItem(CACHE_KEY) || 'null');
+        if (cached && Date.now() - cached.ts < CACHE_TTL && cached.moves.length) return cached.moves;
+      } catch {}
+      const moves = await fetchMoves();
+      try { localStorage.setItem(CACHE_KEY, JSON.stringify({ moves, ts: Date.now() })); } catch {}
+      return moves;
+    }
+
+    // ── Move selection ────────────────────────────────────────────────────────
+    function getFilteredMoves() {
+      let pool = movesDB;
+      if (deskMode) pool = pool.filter(m => m.atWork);
+      if (activeEffects.size) pool = pool.filter(m => [...activeEffects].some(e => m.effects.includes(e)));
+      if (activePosition) {
+        const matchPos = activePosition === 'floor' ? ['floor', 'lying'] : [activePosition];
+        pool = pool.filter(m => m.positions && matchPos.some(p => m.positions.map(x=>x.toLowerCase()).includes(p)));
+      }
+      if (activeDifficulty) pool = pool.filter(m => m.difficulty === activeDifficulty);
+      // fall back to desk pool (or all) if filters leave nothing
+      if (!pool.length) pool = deskMode ? movesDB.filter(m => m.atWork) : movesDB;
+      return pool.length ? pool : movesDB;
+    }
+
+    function pickRandomMove() {
+      const pool = getFilteredMoves();
+      const fresh = pool.length > RECENT_SIZE ? pool.filter(m => !recentVideoIds.includes(m.videoId)) : pool;
+      const candidates = fresh.length ? fresh : pool;
+      const move = candidates[Math.floor(Math.random() * candidates.length)];
+      recentVideoIds = [move.videoId, ...recentVideoIds].slice(0, RECENT_SIZE);
+      return move;
+    }
+
+    // ── Load / shuffle ────────────────────────────────────────────────────────
+    function loadMove(move, autoplay = false) {
+      window._currentMove = move;
+      videoLoaded = autoplay;
+      const iframe  = document.getElementById('drrust-iframe');
+      const overlay = document.getElementById('drrust-overlay');
+      const doneBtn = document.getElementById('drrust-done-btn');
+
+      document.getElementById('drrust-move-name').textContent = move.name;
+      document.getElementById('drrust-overlay-name').textContent = move.name;
+      renderMoveTags(move);
+
+      if (autoplay) {
+        overlay.classList.add('loaded');
+        doneBtn.style.display = 'flex';
+        iframe.src = `https://www.youtube.com/embed/${move.videoId}?rel=0&modestbranding=1&autoplay=1&loop=1&playlist=${move.videoId}&mute=${isMuted?1:0}&enablejsapi=1`;
+      } else {
+        overlay.classList.remove('loaded');
+        doneBtn.style.display = 'none';
+        iframe.src = '';
+      }
+    }
+
+    function shuffle(autoplay) { loadMove(pickRandomMove(), autoplay); }
+
+    // ── Anonymous user ID + retention logging ────────────────────────────────
+    function getUserId() {
+      const k = 'drrust_user_id';
+      let id = localStorage.getItem(k);
+      if (!id) {
+        id = crypto.randomUUID();
+        localStorage.setItem(k, id);
+        setTimeout(() => logEvent('install', null), 300);
+      }
+      return id;
+    }
+
+    async function logEvent(type, move) {
+      try {
+        await fetch(`${SUPABASE_URL}/rest/v1/completions`, {
+          method: 'POST',
+          headers: {
+            apikey: SUPABASE_KEY,
+            Authorization: `Bearer ${SUPABASE_KEY}`,
+            'Content-Type': 'application/json',
+            Prefer: 'return=minimal'
+          },
+          body: JSON.stringify({
+            user_id: getUserId(),
+            event_type: type,
+            move_name: move ? move.name : null,
+            effects: move ? move.effects : [],
+            source: 'daemon'
+          })
+        });
+      } catch {}
+    }
+
+    // ── Daily count ───────────────────────────────────────────────────────────
+    const TODAY = new Date().toDateString();
+    const COUNT_KEY = 'drrust_daily_count';
+    const RECAP_KEY = 'drrust_recap_shown';
+    const RECAP_AT  = 3;
+
+    function getTodayData() {
+      try {
+        const d = JSON.parse(localStorage.getItem(COUNT_KEY) || 'null');
+        if (d && d.date === TODAY) return d;
+      } catch {}
+      return { date: TODAY, count: 0, tally: {} };
+    }
+
+    function incrementCount(effects = []) {
+      const data = getTodayData();
+      const count = data.count + 1;
+      const tally = { ...data.tally };
+      effects.forEach(e => { tally[e] = (tally[e] || 0) + 1; });
+      localStorage.setItem(COUNT_KEY, JSON.stringify({ date: TODAY, count, tally }));
+      return { count, tally };
+    }
+
+    function renderRecap(tally, count) {
+      const bars = document.getElementById('drrust-recap-bars');
+      const tot  = document.getElementById('drrust-recap-total');
+      if (!bars) return;
+      if (tot) tot.textContent = `🔥 ${count} today`;
+      const max = Math.max(1, ...Object.values(tally));
+      bars.innerHTML = EFFECTS
+        .filter(e => tally[e] > 0)
+        .map(e => `
+          <div class="drrust-rbar-row">
+            <span class="drrust-rbar-label">${EFFECT_LABELS[e]}</span>
+            <div class="drrust-rbar-track">
+              <div class="drrust-rbar-fill" style="width:${Math.round(tally[e]/max*100)}%;background:${EFFECT_COLORS[e]}"></div>
+            </div>
+            <span class="drrust-rbar-n">${tally[e]}</span>
+          </div>`).join('') || '<div class="drrust-rbar-empty">No moves yet today</div>';
+    }
+
+    function updateCountDisplay(n, bump) {
+      const num = document.getElementById('drrust-count-num');
+      const flame = document.getElementById('drrust-flame');
+      num.textContent = n;
+      num.classList.toggle('has-moves', n > 0);
+      if (n > 0) flame.style.animation = `drrust-flame-flicker ${1.4 - Math.min(n,8)*0.05}s ease-in-out infinite`;
+      else flame.style.animation = '';
+      if (bump) {
+        flame.classList.remove('bump');
+        void flame.offsetWidth;
+        flame.classList.add('bump');
+        flame.addEventListener('animationend', () => flame.classList.remove('bump'), { once: true });
+      }
+    }
+
+    // ── Move tags ─────────────────────────────────────────────────────────────
+    function renderMoveTags(move) {
+      const container = document.getElementById('drrust-move-tags');
+      let html = '';
+      (move.effects || []).forEach(e => {
+        const color = EFFECT_COLORS[e] || 'rgba(255,255,255,0.3)';
+        html += `<span class="drrust-move-tag effect-tag" style="--tag-color:${color}">${EFFECT_LABELS[e] || e}</span>`;
+      });
+      (move.positions || []).forEach(p => {
+        html += `<span class="drrust-move-tag">${p}</span>`;
+      });
+      if (move.difficulty) html += `<span class="drrust-move-tag">${{easy:'Easy',medium:'Medium',hard:'Hard'}[move.difficulty] || move.difficulty}</span>`;
+      container.innerHTML = html;
+    }
+
+    // ── Called by daemon when hook fires ──────────────────────────────────────
+    function onTrigger() {
+      logEvent('trigger', null);
+      const { count, tally } = getTodayData(); // read-only, no increment
+      updateCountDisplay(count);
+      updatePillCount(count);
+      renderRecap(tally, count);
+      if (isCollapsed) expand();
+      shuffle(true);
+    }
+
+    // ── Chips ─────────────────────────────────────────────────────────────────
+    function renderChips() {
+      let html = '';
+      [...activeEffects].forEach(e => {
+        html += `<div class="drrust-chip" style="--effect-color:${EFFECT_COLORS[e]}">${EFFECT_LABELS[e]}<button class="drrust-chip-x" data-type="effect" data-value="${e}">×</button></div>`;
+      });
+      if (activePosition) html += `<div class="drrust-chip drrust-chip-neutral">${activePosition}<button class="drrust-chip-x" data-type="position" data-value="${activePosition}">×</button></div>`;
+      if (activeDifficulty) html += `<div class="drrust-chip drrust-chip-neutral">${activeDifficulty}<button class="drrust-chip-x" data-type="difficulty" data-value="${activeDifficulty}">×</button></div>`;
+      document.getElementById('drrust-active-chips').innerHTML = html;
+      document.querySelectorAll('.drrust-chip-x').forEach(btn => {
+        btn.addEventListener('click', ev => {
+          ev.stopPropagation();
+          const { type, value } = btn.dataset;
+          if (type === 'effect') { activeEffects.delete(value); document.querySelector(`.drrust-effect-btn[data-effect="${value}"]`)?.classList.remove('active'); }
+          else if (type === 'position') { activePosition = null; document.querySelectorAll('.drrust-filter-chip[data-filter="position"]').forEach(c => c.classList.remove('active')); }
+          else if (type === 'difficulty') { activeDifficulty = null; document.querySelectorAll('.drrust-filter-chip[data-filter="difficulty"]').forEach(c => c.classList.remove('active')); }
+          renderChips(); shuffle(videoLoaded); resizeWindow();
+        });
+      });
+    }
+
+    // ── Stop video ────────────────────────────────────────────────────────────
+    function stopVideo() {
+      document.getElementById('drrust-iframe').src = '';
+      videoLoaded = false;
+    }
+
+    // ── Loop enforcement — restart when YouTube ends instead of advancing ─────
+    window.addEventListener('message', function(e) {
+      try {
+        const data = typeof e.data === 'string' ? JSON.parse(e.data) : e.data;
+        if (data.event === 'onStateChange' && data.info === 0) {
+          const iframe = document.getElementById('drrust-iframe');
+          if (iframe.src) {
+            iframe.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'seekTo',   args: [0, true] }), '*');
+            iframe.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'playVideo', args: [] }),       '*');
+          }
+        }
+      } catch(_) {}
+    });
+
+    // ── Collapse / expand ─────────────────────────────────────────────────────
+    const PILL_H = 52;
+    const PILL_W = 180;
+    let isCollapsed = false;
+
+    function updatePillCount(n) {
+      const el = document.getElementById('drrust-pill-count');
+      if (!el) return;
+      if (n > 0) { el.textContent = `🔥 ${n}`; el.classList.add('visible'); }
+      else el.classList.remove('visible');
+    }
+
+    function collapse(keepVideo = false) {
+      isCollapsed = true;
+      if (!keepVideo) stopVideo();
+      document.getElementById('drrust-card').style.display = 'none';
+      document.getElementById('drrust-pill').style.display = 'flex';
+      if (window.pywebview) window.pywebview.api.collapse(PILL_H, PILL_W);
+    }
+
+    function expand() {
+      isCollapsed = false;
+      document.getElementById('drrust-recap').style.display = 'none';
+      document.getElementById('drrust-pill').style.display = 'none';
+      document.getElementById('drrust-card').style.display = '';
+      if (videoLoaded && window._currentMove) loadMove(window._currentMove, true);
+      resizeWindow();
+    }
+
+    // ── Close (via pywebview API) ─────────────────────────────────────────────
+    function closeWidget() {
+      logEvent('dismiss', window._currentMove);
+      stopVideo();
+      if (window.pywebview) window.pywebview.api.close();
+      else window.close();
+    }
+
+    // ── Resize window to fit content ──────────────────────────────────────────
+    function resizeWindow() {
+      clearTimeout(window._resizeTimer);
+      window._resizeTimer = setTimeout(() => {
+        if (!window.pywebview) return;
+        const card = document.getElementById('drrust-card');
+        void card.offsetHeight; // force reflow before measuring
+        window.pywebview.api.resize(card.scrollHeight + 12);
+      }, 60);
+    }
+
+    // ── Init ──────────────────────────────────────────────────────────────────
+    async function init() {
+      movesDB = await loadMoves();
+      if (!movesDB.length) return;
+
+      // Build effect buttons
+      document.getElementById('drrust-effects').innerHTML = EFFECTS.map(e => `
+        <button class="drrust-effect-btn" data-effect="${e}" style="--effect-color:${EFFECT_COLORS[e]}">
+          <div class="drrust-effect-circle">
+            <img src="icons/effects/${EFFECT_ICONS[e]}" alt="${EFFECT_LABELS[e]}">
+          </div>
+          <span class="drrust-effect-label">${EFFECT_LABELS[e]}</span>
+        </button>
+      `).join('');
+
+      shuffle(false);
+      const initData = getTodayData();
+      updateCountDisplay(initData.count);
+      updatePillCount(initData.count);
+      renderRecap(initData.tally || {}, initData.count);
+
+      // Effect buttons
+      document.querySelectorAll('.drrust-effect-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const e = btn.dataset.effect;
+          if (activeEffects.has(e)) { activeEffects.delete(e); btn.classList.remove('active'); }
+          else { activeEffects.add(e); btn.classList.add('active'); }
+          renderChips(); shuffle(videoLoaded);
+        });
+      });
+
+      // Mute button
+      const MUTE_OFF = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>`;
+      const MUTE_ON  = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>`;
+      const muteBtn = document.getElementById('drrust-mute-btn');
+      function updateMuteBtn() {
+        muteBtn.innerHTML = isMuted ? MUTE_OFF : MUTE_ON;
+        muteBtn.classList.toggle('unmuted', !isMuted);
+      }
+      updateMuteBtn();
+      muteBtn.addEventListener('click', () => {
+        isMuted = !isMuted;
+        localStorage.setItem('drrust_muted', isMuted);
+        updateMuteBtn();
+        if (videoLoaded) shuffle(true);
+      });
+
+      // Shuffle button
+      document.getElementById('drrust-shuffle-btn').addEventListener('click', () => shuffle(videoLoaded));
+
+      const videoWrap = document.getElementById('drrust-video-wrap');
+      const hoverGuard = document.getElementById('drrust-hover-guard');
+      videoWrap.addEventListener('mouseenter', () => { hoverGuard.style.pointerEvents = 'none'; });
+      videoWrap.addEventListener('mouseleave', () => { hoverGuard.style.pointerEvents = 'all'; });
+
+      // Play overlay click
+      document.getElementById('drrust-overlay').addEventListener('click', () => {
+        const move = pickRandomMove();
+        loadMove(move, true);
+      });
+
+      // Done button
+      document.getElementById('drrust-done-btn').addEventListener('click', () => {
+        const comp = document.getElementById('drrust-complete');
+        const check = document.getElementById('drrust-check');
+        comp.classList.add('active');
+        const currentMove = window._currentMove;
+        const { count: newCount, tally: newTally } = incrementCount(currentMove ? currentMove.effects : []);
+        logEvent('complete', currentMove);
+        updateCountDisplay(newCount, true);
+        setTimeout(() => {
+          comp.classList.remove('active');
+          check.style.animation = 'none';
+          check.offsetHeight;
+          check.style.animation = '';
+          updatePillCount(newCount);
+          renderRecap(newTally, newCount);
+
+          const autoRecap = newCount === RECAP_AT && localStorage.getItem(RECAP_KEY) !== TODAY;
+          if (autoRecap) {
+            localStorage.setItem(RECAP_KEY, TODAY);
+            // show recap panel directly (skip pill)
+            document.getElementById('drrust-card').style.display = 'none';
+            document.getElementById('drrust-pill').style.display = 'none';
+            const recap = document.getElementById('drrust-recap');
+            recap.style.display = 'flex';
+            isCollapsed = true;
+            if (window.pywebview) {
+              requestAnimationFrame(() => requestAnimationFrame(() => {
+                window.pywebview.api.collapse(recap.scrollHeight + 8, 190);
+              }));
+            }
+          } else {
+            collapse();
+          }
+        }, 1000);
+      });
+
+      // Close button
+      document.getElementById('drrust-close').addEventListener('click', closeWidget);
+
+      // Minimize → pill
+      document.getElementById('drrust-minimize').addEventListener('click', () => collapse(true));
+
+      document.getElementById('drrust-pill').addEventListener('click', expand);
+
+      document.getElementById('drrust-recap-btn').addEventListener('click', e => {
+        e.stopPropagation(); // prevent pill click → expand
+        document.getElementById('drrust-pill').style.display = 'none';
+        const recap = document.getElementById('drrust-recap');
+        recap.style.display = 'flex';
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+          const h = recap.scrollHeight + 8;
+          if (window.pywebview) window.pywebview.api.collapse(h, 190);
+        }));
+      });
+
+      document.getElementById('drrust-recap-close').addEventListener('click', () => {
+        document.getElementById('drrust-recap').style.display = 'none';
+        document.getElementById('drrust-pill').style.display = 'flex';
+        if (window.pywebview) window.pywebview.api.collapse(PILL_H, PILL_W);
+      });
+
+      // Desk Moves toggle
+      document.getElementById('drrust-desk-btn').addEventListener('click', () => {
+        deskMode = !deskMode;
+        document.getElementById('drrust-desk-btn').classList.toggle('active', deskMode);
+        shuffle(videoLoaded);
+      });
+
+      // More filters toggle
+      let moreOpen = false;
+      document.getElementById('drrust-more-toggle').addEventListener('click', () => {
+        moreOpen = !moreOpen;
+        document.getElementById('drrust-more-filters').style.display = moreOpen ? 'block' : 'none';
+        document.getElementById('drrust-more-arrow').style.transform = moreOpen ? 'rotate(180deg)' : '';
+        resizeWindow();
+      });
+
+      // Position / difficulty chips
+      document.querySelectorAll('.drrust-filter-chip').forEach(chip => {
+        chip.addEventListener('click', () => {
+          const { filter: group, value } = chip.dataset;
+          const already = chip.classList.contains('active');
+          document.querySelectorAll(`.drrust-filter-chip[data-filter="${group}"]`).forEach(c => c.classList.remove('active'));
+          if (already) { if (group === 'position') activePosition = null; else activeDifficulty = null; }
+          else { chip.classList.add('active'); if (group === 'position') activePosition = value; else activeDifficulty = value; }
+          renderChips(); shuffle(videoLoaded);
+        });
+      });
+    }
+
+    init();
+  </script>
+</body>
+</html>
