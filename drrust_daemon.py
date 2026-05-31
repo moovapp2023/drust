@@ -99,6 +99,44 @@ def get_positions():
         return (1600, 300)
 
 
+def set_dock_appearance():
+    try:
+        from AppKit import (NSApplication, NSImage, NSColor, NSFont,
+                            NSBezierPath, NSForegroundColorAttributeName,
+                            NSFontAttributeName)
+        from Foundation import NSMakeRect, NSString, NSBundle
+
+        SIZE = 512
+        img = NSImage.alloc().initWithSize_((SIZE, SIZE))
+        img.lockFocus()
+
+        # Rust-red rounded square background (#B7410E)
+        NSColor.colorWithRed_green_blue_alpha_(
+            0xB7 / 255, 0x41 / 255, 0x0E / 255, 1.0
+        ).set()
+        NSBezierPath.bezierPathWithRoundedRect_xRadius_yRadius_(
+            NSMakeRect(0, 0, SIZE, SIZE), SIZE * 0.22, SIZE * 0.22
+        ).fill()
+
+        # White "D"
+        font = NSFont.fontWithName_size_("Arial-BoldMT", SIZE * 0.87) or \
+               NSFont.boldSystemFontOfSize_(SIZE * 0.87)
+        NSString.stringWithString_("D").drawAtPoint_withAttributes_(
+            (SIZE * 0.06, SIZE * 0.04),
+            {NSFontAttributeName: font,
+             NSForegroundColorAttributeName: NSColor.whiteColor()},
+        )
+
+        img.unlockFocus()
+        NSApplication.sharedApplication().setApplicationIconImage_(img)
+
+        # Change dock/menu-bar name from "Python" to "DRUST"
+        info = NSBundle.mainBundle().infoDictionary()
+        info["CFBundleName"] = "DRUST"
+    except Exception:
+        pass
+
+
 def main():
     global widget_window
     check_for_updates()
@@ -117,7 +155,7 @@ def main():
         background_color='#0f0f0f',
     )
 
-    webview.start(http_server=True)
+    webview.start(http_server=True, func=set_dock_appearance)
 
 
 if __name__ == '__main__':
